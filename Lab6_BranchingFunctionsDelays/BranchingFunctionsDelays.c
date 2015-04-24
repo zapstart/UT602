@@ -14,7 +14,8 @@
 // built-in connection: PF4 connected to negative logic momentary switch, SW1
 
 #include "TExaS.h"
-
+#include "..\Header\standard_define.h"
+	
 #define GPIO_PORTF_DATA_R       (*((volatile unsigned long *)0x400253FC))
 #define GPIO_PORTF_DIR_R        (*((volatile unsigned long *)0x40025400))
 #define GPIO_PORTF_AFSEL_R      (*((volatile unsigned long *)0x40025420))
@@ -31,18 +32,24 @@
 void DisableInterrupts(void); // Disable interrupts
 void EnableInterrupts(void);  // Enable interrupts
 void PortF_Init(void);
-void Delay100ms(U64 time)
+void Delay100ms(U64 time);
 
 int main(void){ 
-    volatile U64 delay;
-  
-    TExaS_Init(SW_PIN_PF4, LED_PIN_PF2);  // activate grader and set system clock to 80 MHz
-    // initialization goes here
+    volatile long delay;
+    U32 SW; 
     
+    TExaS_Init(SW_PIN_PF4, LED_PIN_PF2);  // activate grader and set system clock to 80 MHz
     PortF_Init(); 
     EnableInterrupts();           // enable interrupts for the grader
     while(1){
-      // body goes here
+			  Delay100ms(0x1);
+        SW = GPIO_PORTF_DATA_R & 0x10;
+        if (SW) {
+            GPIO_PORTF_DATA_R = 0x04;
+        }
+        else {
+            GPIO_PORTF_DATA_R ^= 0x00000004;
+        }
     }
 }
 
@@ -56,7 +63,7 @@ void PortF_Init(void) {
     GPIO_PORTF_AFSEL_R = 0x00;          // 6) no alternate function
     GPIO_PORTF_PUR_R   = 0x10;          // enable pullup resistors on PF4,PF0       
     GPIO_PORTF_DEN_R   = 0x14;          // 7) enable digital pins PF4-PF0 
-    GPIO_PORTF_DATA_R  = 0x04; 
+    GPIO_PORTF_DATA_R  = 0x00; 
 }
 
 void Delay100ms(U64 time){
