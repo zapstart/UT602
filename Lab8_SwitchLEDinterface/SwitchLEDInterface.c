@@ -28,41 +28,36 @@ void Delay_1ms(U64 time);
 // shown in Lab8_artist.sch (PCB Artist schematic file) or 
 // Lab8_artist.pdf (compatible with many various readers like Adobe Acrobat).
 int main(void){ 
-//**********************************************************************
-// The following version tests input on PE0 and output on PE1
-//**********************************************************************
-TExaS_Init(SW_PIN_PE0, LED_PIN_PE1);  // activate grader and set system clock to 80 MHz
-  
-	
-EnableInterrupts();           // enable interrupts for the grader
+    //**********************************************************************
+    // The following version tests input on PE0 and output on PE1
+    //**********************************************************************
+    TExaS_Init(SW_PIN_PE0, LED_PIN_PE1);  // activate grader and set system clock to 80 MHz
+    GPIO_port_init(); 
+    EnableInterrupts();           // enable interrupts for the grader
+    
+    GPIO_PORTE_DATA_R |= 0x02; 
     while(1){
-        
+        Delay_1ms(100);
+        if (GPIO_PORTE_DATA_R & 0x01) {
+            GPIO_PORTE_DATA_R ^= 0x02;
+        }
+        else {
+           GPIO_PORTE_DATA_R |= 0x02; 
+        }
     }
-  
 }
 
 void GPIO_port_init(void) {
-    SYSCTL_RCGC2_R     = ;
-    
-    // GPIO port E
-    GPIO_PORTE_LOCK_R  = 0x4C4F434B;  
-    GPIO_PORTE_CR_R    = 0x14;       
-    GPIO_PORTE_AMSEL_R = 0x0;
-    GPIO_PORTE_DIR_R   = 0x04;          
-    GPIO_PORTE_AFSEL_R = 0x00;          
-    GPIO_PORTE_PUR_R   = 0x10;         
-    GPIO_PORTE_DEN_R   = 0x14;        
-    GPIO_PORTE_DATA_R  = 0x00; 
-    
-    // GPIO port B
-    GPIO_PORTB_LOCK_R  = 0x4C4F434B;  
-    GPIO_PORTB_CR_R    = 0x14;       
-    GPIO_PORTB_AMSEL_R = 0x0;
-    GPIO_PORTB_DIR_R   = 0x04;          
-    GPIO_PORTB_AFSEL_R = 0x00;          
-    GPIO_PORTB_PUR_R   = 0x10;         
-    GPIO_PORTB_DEN_R   = 0x14;        
-    GPIO_PORTB_DATA_R  = 0x00; 
+    U64 delay;
+
+    // init GPIO port E0 and E1
+    SYSCTL_RCGC2_R     |= 0x10;
+    delay = SYSCTL_RCGG2_R; 
+    GPIO_PORTE_AMSEL_R &= ~0x03;
+    GPIO_PORTE_DIR_R   |= 0x02;          
+    GPIO_PORTE_DIR_R   &= ~0x01;          
+    GPIO_PORTE_AFSEL_R &= ~0x03;          
+    GPIO_PORTE_DEN_R   |= 0x03;        
 }
 
 void Delay_1ms(U64 time){
