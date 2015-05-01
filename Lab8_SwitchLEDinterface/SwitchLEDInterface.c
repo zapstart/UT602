@@ -11,6 +11,7 @@
 // ***** 1. Pre-processor Directives Section *****
 #include "TExaS.h"
 #include "tm4c123gh6pm.h"
+#include "..\Header\standard_define.h"
 
 // ***** 2. Global Declarations Section *****
 
@@ -52,7 +53,7 @@ void GPIO_port_init(void) {
 
     // init GPIO port E0 and E1
     SYSCTL_RCGC2_R     |= 0x10;
-    delay = SYSCTL_RCGG2_R; 
+    delay = SYSCTL_RCGC2_R; 
     GPIO_PORTE_AMSEL_R &= ~0x03;
     GPIO_PORTE_DIR_R   |= 0x02;          
     GPIO_PORTE_DIR_R   &= ~0x01;          
