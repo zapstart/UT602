@@ -11,6 +11,7 @@
 // ***** 1. Pre-processor Directives Section *****
 #include "TExaS.h"
 #include "tm4c123gh6pm.h"
+#include "..\header\standard_define.h"
 
 // ***** 2. Global Declarations Section *****
 
@@ -69,13 +70,26 @@ void SysTick_Init(void) {
 U64 Led;
 
 // delay 0.05s @16MHz
+/*
 void Delay(void) {
     U32 current;
         
     current = NVIC_ST_CURRENT_R;
-    while (!(NVIC_ST_CURRENT_R & 0xFFFFFF == current - 800000)); 
+    while (!((NVIC_ST_CURRENT_R & 0xFFFFFF) == current - 200)); 
 }
+*/
 
+void Delay_1ms(U64 time){
+    U64 i;
+
+    while(time > 0){
+        i = 2667;
+        while(i > 0){
+            i = i - 1;
+        }
+        time = time - 1; 
+    }
+}
 // first data point is wrong, the other 49 will be correct
 unsigned long Time[50];
 
@@ -90,9 +104,9 @@ int main(void){
     i = 0;          // array index
     last = NVIC_ST_CURRENT_R;
     EnableInterrupts();           // enable interrupts for the grader
+	  GPIO_PORTF_DATA_R &= ~0x02;
     while(1){
-        GPIO_PORTF_DATA_R &= ~0x02;
-        if ((GPIO_PORTF_DATA_R & 0x01) || (GPIO_PORTF_DATA_R & 0x10)) {
+        if ((GPIO_PORTF_DATA_R & 0x01) == 0x0 || (GPIO_PORTF_DATA_R & 0x10) == 0x0) {
             GPIO_PORTF_DATA_R ^= 0x02;
         }
         if(i<50){
@@ -102,7 +116,7 @@ int main(void){
             last = now;
             i++;
         }
-        Delay();
+        Delay_1ms(50);
     }
 }
 
