@@ -22,33 +22,57 @@
 #include "tm4c123gh6pm.h"
 
 // ***** 2. Global Declarations Section *****
-#define init    0
-#define goN     1
-#define waitN   2
-#define goE     3
-#define waitE   4
-#define walk    5
-#define rushW   6
-#define dontW   7
+typedef void (*p_LED_operation) (void);
+
+typedef enum {
+    INIT_s = 0,
+    LED_000_s,
+    LED_001_s,
+    LED_010_s,
+    LED_011_s,
+    LED_100_s,
+    LED_110_s,
+    LED_111_s
+} LED_state;
 
 typedef const struct state {
-    U32 output;
-    U32 delay;
-    U32 Next[8];
-}traffic_light, *ptraffic_light;
+    p_LED_operation LED_operation; 
+    LED_state       Next[4];
+} state_type;
 
-traffic_light TL_FSM[x] = {
-    {x, x, {}},
-    {x, x, {}},
-    {x, x, {}},
-    {x, x, {}},
-    {x, x, {}},
-    {x, x, {}},
-    {x, x, {}},
-    {x, x, {}},
-    {x, x, {}},
-    {x, x, {}},
+void LED_000 (void) {
+
 }
+
+void LED_001 (void) {
+}
+
+void LED_010 (void) {
+}
+
+void LED_011 (void) {
+}
+
+void LED_100 (void) {
+}
+
+void LED_110 (void) {
+}
+
+void LED_111 (void) {
+}
+
+LED_state current_state = 
+
+state_type FSM[7] = {
+    {&LED_000, {LED_111_s, LED_111_s, LED_111_s, LED_111_S}},
+    {&LED_001, {LED_001, LED_000, LED_000, LED_001}},
+    {&LED_010, {LED_010, LED_000, LED_000, LED_010}},
+    {&LED_100, {LED_100, LED_000, LED_000, LED_100}},
+    {&LED_011, {LED_011, LED_001, LED_010, LED_011}},
+    {&LED_110, {LED_110, LED_010, LED_100, LED_110}},
+    {&LED_111, {LED_111, LED_011, LED_110, LED_111}}
+};
 
 // FUNCTION PROTOTYPES: Each subroutine defined
 void DisableInterrupts(void); // Disable interrupts
