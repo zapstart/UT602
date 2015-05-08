@@ -5,17 +5,11 @@
 // Daniel Valvano, Jonathan Valvano
 // December 29, 2014
 
-// east/west red light connected to PB5
-// east/west yellow light connected to PB4
-// east/west green light connected to PB3
-// north/south facing red light connected to PB2
-// north/south facing yellow light connected to PB1
-// north/south facing green light connected to PB0
-// pedestrian detector connected to PE2 (1=pedestrian present)
+// east/west red light connected to PB2
+// east/west yellow light connected to PB1
+// east/west green light connected to PB0
 // north/south car detector connected to PE1 (1=car present)
 // east/west car detector connected to PE0 (1=car present)
-// "walk" light connected to PF3 (built-in green LED)
-// "don't walk" light connected to PF1 (built-in red LED)
 
 // ***** 1. Pre-processor Directives Section *****
 #include "TExaS.h"
@@ -40,30 +34,6 @@ typedef const struct state {
     LED_state       Next[4];
 } state_type;
 
-void LED_000 (void) {
-
-}
-
-void LED_001 (void) {
-}
-
-void LED_010 (void) {
-}
-
-void LED_011 (void) {
-}
-
-void LED_100 (void) {
-}
-
-void LED_110 (void) {
-}
-
-void LED_111 (void) {
-}
-
-LED_state current_state = 
-
 state_type FSM[7] = {
     {&LED_000, {LED_111_s, LED_111_s, LED_111_s, LED_111_S}},
     {&LED_001, {LED_001, LED_000, LED_000, LED_001}},
@@ -75,19 +45,33 @@ state_type FSM[7] = {
 };
 
 // FUNCTION PROTOTYPES: Each subroutine defined
-void DisableInterrupts(void); // Disable interrupts
-void EnableInterrupts(void);  // Enable interrupts
+void DisableInterrupts(void); 
+void EnableInterrupts(void);  
+void delay_1ms(U32 time);
+void LED_000 (void);
+void LED_001 (void);
+void LED_010 (void);
+void LED_011 (void);
+void LED_100 (void);
+void LED_110 (void);
+void LED_111 (void);
+void GPIO_INIT(void);
+void PLL_INIT(void);
 
 // ***** 3. Subroutines Section *****
-void GPIO_INIT(void);
    
 int main(void){ 
+    U32 sw_in;
+
     TExaS_Init(SW_PIN_PE210, LED_PIN_PB543210); 
- 
-    
     EnableInterrupts();
+    GPIO_INIT();
+    
+    LED_state current_state = LED_000_s; 
     while(1){
-     
+        sw_in = GPIO_PORTE_DATA_R & 0x03;
+        (FSM[current_state].LED_operation)();
+        current_state = FSM[current_state].Next[sw_in];
     }
 }
 
@@ -100,23 +84,44 @@ void GPIO_INIT(void) {
     // init port B 
     GPIO_PORTB_AMSEL_R &= ~0xFF;        
     GPIO_PORTB_PCTL_R &= ~0xFF;   
-    GPIO_PORTB_DIR_R |= 0x3F;          
-    GPIO_PORTB_AFSEL_R &= 0xFF;        
-    GPIO_PORTB_DEN_R |= 0x3F;          
+    GPIO_PORTB_DIR_R |= 0x07;          
+    GPIO_PORTB_AFSEL_R &= ~0xFF;        
+    GPIO_PORTB_DEN_R |= 0x07;          
     
     // init port E
     GPIO_PORTE_AMSEL_R &= ~0xFF;        
     GPIO_PORTE_PCTL_R &= ~0xFF;   
-    GPIO_PORTE_DIR_R &= ~0x07;          
+    GPIO_PORTE_DIR_R &= ~0x03;          
     GPIO_PORTE_AFSEL_R &= ~0xFF;        
-    GPIO_PORTE_DEN_R |= 0x07;          
-
-    // init port F 
-    GPIO_PORTB_AMSEL_R &= ~0xFF;        
-    GPIO_PORTB_PCTL_R &= ~0xFF;   
-    GPIO_PORTB_DIR_R |= 0x0A;          
-    GPIO_PORTB_AFSEL_R &= ~0xFF;        
-    GPIO_PORTB_PUR_R |= 0x0A;          
-    GPIO_PORTB_DEN_R |= 0x0A;          
+    GPIO_PORTE_DEN_R |= 0x03;          
 }
 
+// LED: red, yellow, green
+void LED_000 (void) {
+    GPIO_PORTB_DATA_R &= ~0x07;
+    delay_1ms(3);
+}
+
+void LED_001 (void) {
+    GPIO_PORTB_DATA_R |= 0x01;
+}
+
+void LED_010 (void) {
+    GPIO_PORTB_DATA_R |= 0x02;
+}
+
+void LED_011 (void) {
+    GPIO_PORTB_DATA_R |= 0x03;
+}
+
+void LED_100 (void) {
+    GPIO_PORTB_DATA_R |= 0x04;
+}
+
+void LED_110 (void) {
+    GPIO_PORTB_DATA_R |= 0x06;
+}
+
+void LED_111 (void) {
+    GPIO_PORTB_DATA_R |= 0x07;
+}
