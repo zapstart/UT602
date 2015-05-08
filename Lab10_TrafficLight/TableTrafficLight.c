@@ -16,7 +16,7 @@
 #include "tm4c123gh6pm.h"
 
 // ***** 2. Global Declarations Section *****
-typedef void (*p_LED_operation) (void);
+typedef void (*p_LED_operation)(void);
 
 typedef enum {
     INIT_s = 0,
@@ -48,16 +48,18 @@ state_type FSM[7] = {
 void DisableInterrupts(void); 
 void EnableInterrupts(void);  
 void delay_1ms(U32 time);
-void LED_000 (void);
-void LED_001 (void);
-void LED_010 (void);
-void LED_011 (void);
-void LED_100 (void);
-void LED_110 (void);
-void LED_111 (void);
-void GPIO_INIT(void);
+void delay_clk(U32 clk_cnt);
+void LED_000(void);
+void LED_001(void);
+void LED_010(void);
+void LED_011(void);
+void LED_100(void);
+void LED_110(void);
+void LED_111(void);
 void PLL_INIT(void);
-
+void GPIO_INIT(void);
+void SYSTICK_INIT(void);
+void SYSTICK_INIT(void);
 // ***** 3. Subroutines Section *****
    
 int main(void){ 
@@ -65,8 +67,9 @@ int main(void){
 
     TExaS_Init(SW_PIN_PE210, LED_PIN_PB543210); 
     EnableInterrupts();
+    PLL_INIT(); 
     GPIO_INIT();
-    
+        
     LED_state current_state = LED_000_s; 
     while(1){
         sw_in = GPIO_PORTE_DATA_R & 0x03;
@@ -75,6 +78,27 @@ int main(void){
     }
 }
 
+void PLL_INIT(void) {
+    SYSCTL_RCC_R = (SYSCTL_RCC_R &~0x000007C0)   // clear XTAL field, bits 10-6
+                   + 0x00000540;   // 10101, configure for 16 MHz crystal
+    // 0) Use RCC2
+    SYSCTL_RCC2_R |=  0x80000000;  // USERCC2
+    // 1) bypass PLL while initializing
+    SYSCTL_RCC2_R |=  0x00000800;  // BYPASS2, PLL bypass
+    // 2) select the crystal value and oscillator source
+    SYSCTL_RCC2_R &= ~0x00000070;  // configure for main oscillator source
+    // 3) activate PLL by clearing PWRDN
+    SYSCTL_RCC2_R &= ~0x00002000;
+    // 4) set the desired system divider
+    SYSCTL_RCC2_R |= 0x40000000;   // use 400 MHz PLL
+    SYSCTL_RCC2_R = (SYSCTL_RCC2_R&~ 0x1FC00000)  // clear system clock divider
+                    + (4<<22);      // configure for 80 MHz clock
+    // 5) wait for the PLL to lock by polling PLLLRIS
+    while((SYSCTL_RIS_R&0x00000040)==0){};  // wait for PLLRIS bit
+    // 6) enable use of PLL by clearing BYPASS
+    SYSCTL_RCC2_R &= ~0x00000800;
+}  
+    
 void GPIO_INIT(void) {
     volatile U64 delay;
     
@@ -94,6 +118,25 @@ void GPIO_INIT(void) {
     GPIO_PORTE_DIR_R &= ~0x03;          
     GPIO_PORTE_AFSEL_R &= ~0xFF;        
     GPIO_PORTE_DEN_R |= 0x03;          
+}
+
+void SYSTICK_INIT(void) {
+  NVIC_ST_CTRL_R = 0;               
+  NVIC_ST_CTRL_R = 0x00000005;      
+}
+
+void delay_1ms(U32 time){
+    U32 i;
+    
+    for(i = 0; i < time; i++){
+      delay_clk(80000);  
+    }
+}
+
+void delay_clk(U32 clk_cnt) {
+  NVIC_ST_RELOAD_R = clk_cnt - 1;  // number of counts to wait
+  NVIC_ST_CURRENT_R = 0;       // any value written to CURRENT clears
+  while((NVIC_ST_CTRL_R & 0x00010000)==0); // wait for count flag
 }
 
 // LED: red, yellow, green
