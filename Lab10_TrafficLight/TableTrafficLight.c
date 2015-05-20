@@ -72,7 +72,7 @@ int main(void){
         
     LED_state current_state = LED_000_s; 
     while(1){
-        sw_in = GPIO_PORTE_DATA_R & 0x03;
+        sw_in = GPIO_PORTF_DATA_R & 0x11;
         (FSM[current_state].LED_operation)();
         current_state = FSM[current_state].Next[sw_in];
     }
