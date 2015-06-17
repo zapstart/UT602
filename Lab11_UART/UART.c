@@ -1,4 +1,4 @@
-// UART.c
+    // UART.c
 // Runs on TM4C123 or LM4F120
 // Lab 11 involves switching this from UART1 to UART0.
 //                 switching from PC5,PC4 to PA1,PA0
@@ -123,7 +123,11 @@ char character;
 // Output: none
 void UART_OutString(unsigned char buffer[]){
 // as part of Lab 11 implement this function
-
+    U16 i = 0; 
+    while (buffer[i] != NULL) {
+        UART_OutChar(buffer[i]); 
+        i++;
+    } 
 }
 
 unsigned char String[10];
@@ -140,7 +144,24 @@ unsigned char String[10];
 //10000 to "**** "  any value larger than 9999 converted to "**** "
 void UART_ConvertUDec(unsigned long n){
 // as part of Lab 11 implement this function
-  
+    U16 num, i;
+    String[4] = ' ';
+    
+    if (n > 9999) {
+        for (i = 0; i < 4; i++) {
+            String[i] = '*'; 
+        }
+    }
+    else {
+            String[0] = n / 1000 != 0 ? n / 1000 + '0' : ' ';
+            n /= 10; 
+            String[1] = n / 100 != 0 ? n / 100 + '0' : ' ';
+            n /= 10; 
+            String[2] = n / 10 != 0 ? n / 10 + '0' : ' ';
+            n /= 10; 
+            String[3] = n + '0';
+        }
+    } 
 }
 
 //-----------------------UART_OutUDec-----------------------
@@ -166,7 +187,30 @@ void UART_OutUDec(unsigned long n){
 //10000 to "*.*** cm"  any value larger than 9999 converted to "*.*** cm"
 void UART_ConvertDistance(unsigned long n){
 // as part of Lab 11 implement this function
-  
+    U16 num, i;
+    String[1] = '.';
+    String[5] = ' ';
+    String[6] = 'c';
+    String[7] = 'm';
+    
+    if (n > 9999) {
+        for (i = 0; i < 4; i++) {
+            if (i != 1) { 
+                String[i] = '*'; 
+            }
+        }
+    }
+    else {
+        for (i = 4; i != 0; i--) {
+            if (i != 1) {
+                String[i] = n % 10 + '0';
+                n = n / 10;
+            }
+        }
+        if (String[4] == '0' && String[3] == '0' && String[2] == '0' && String[0] == '0') {
+            String[4] = String[3] = String[2] = String[0] = ' ';
+        }
+    } 
 }
 
 //-----------------------UART_OutDistance-----------------------
